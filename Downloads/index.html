@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Skhol Dev</title>
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: Arial;
+            background-image: url('../Images/wallpaper8K.png');
+            background-repeat: no-repeat;
+            color: white;
+        }
+    </style>
+</head>
+<body bgcolor="#000000">
+    <h1>(Skhol Dev) 官方網站</h1>
+    <p style="background-image: url('../Images/banner.png');">
+        <br/><br/><br/>
+        | <a href="https://skiawm91.github.io/Skhol-Dev/Home" style="color:white;">Home</a> |
+        <a href="https://skiawm91.github.io/Skhol-Dev/News" style="color:white;">News</a> |
+        <a href="https://skiawm91.github.io/Skhol-Dev/Downloads" style="color:white;">Downloads</a> |
+    </p>
+    <p>Other</p>
+    <ul id="file-list" class="fa-ul"></ul>
+    
+    <script>
+        const repoOwner = "Skiawm91";
+        const repoName = "Skhol-Dev";
+        const folderPath = "Files";
+        const branch = "main";
+
+        async function fetchFiles() {
+            const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}?ref=${branch}`;
+            try {
+                const response = await fetch(url);
+                const files = await response.json();
+                const list = document.getElementById("file-list");
+                list.innerHTML = "";
+                
+                files.forEach(file => {
+                    if (file.type === "file") {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<span class="fa-li"><i class="fa fa-file"></i></span>
+                                        <a href="${file.download_url}" style="color:white;">${file.name}</a>`;
+                        list.appendChild(li);
+                    }
+                });
+            } catch (error) {
+                console.error("無法獲取 GitHub 檔案列表", error);
+            }
+        }
+
+        fetchFiles();
+    </script>
+    
+    <footer>
+        <small>2025(c) Skhol Dev</small>
+    </footer>
+</body>
+</html>
