@@ -29,7 +29,7 @@
         const repoName = "Skhol-Dev";
         const branch = "main";
         const apiBase = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
-        
+        let expandedFolders = new Set();
         async function fetchFiles(path, parentElement, expandPath = "") {
             const url = `${apiBase}${path}?ref=${branch}`;
             try {
@@ -41,11 +41,11 @@
                     const li = document.createElement("li");
                     if (item.type === "dir") {
                         li.innerHTML = `<span class="fa-li"><i class="fa fa-folder"></i></span>
-                            <a href="#" style="color:white;" onclick="toggleFolder('${item.path}', this)">${item.name}</a>
+                            <a href="#${item.path}" style="color:white;" onclick="toggleFolder('${item.path}', this, event)">${item.name}</a>
                             <ul id="folder-${item.path}" style="display:none; padding-left: 20px;"></ul>`;
                         parentElement.appendChild(li);
-                        if (expandPath.startsWith(item.path)) {
-                            toggleFolder(item.path, li.querySelector("a"), expandPath);
+                        if (expandedFolders.has(item.path) || expandPath.startsWith(item.path)) {
+                            toggleFolder(item.path, li.querySelector("a"), null, expandPath);
                         }
                     } else {
                         li.innerHTML = `<span class="fa-li"><i class="fa fa-file"></i></span>
@@ -57,8 +57,8 @@
                 console.error("無法獲取 GitHub 檔案列表", error);
             }
         }
-        
-        function toggleFolder(path, element, expandPath = "") {
+        function toggleFolder(path, element, event, expandPath = "") {
+            if (event) event.preventDefault();
             const folderElement = document.getElementById(`folder-${path}`);
             if (!folderElement) return;
             if (folderElement.style.display === "none" || folderElement.style.display === "") {
@@ -66,18 +66,15 @@
                     fetchFiles(path, folderElement, expandPath).then(() => folderElement.setAttribute("loaded", "true"));
                 }
                 folderElement.style.display = "block";
+                expandedFolders.add(path);
             } else {
                 folderElement.style.display = "none";
+                expandedFolders.delete(path);
             }
         }
-        
         function handleHash() {
             const hashPath = decodeURIComponent(window.location.hash.substring(1));
-            if (hashPath) {
-                fetchFiles("Files", document.getElementById("file-list"), `Files/${hashPath}`);
-            } else {
-                fetchFiles("Files", document.getElementById("file-list"));
-            }
+            fetchFiles("Files", document.getElementById("file-list"), `Files/${hashPath}`);
         }
         
         window.addEventListener("hashchange", handleHash);
