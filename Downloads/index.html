@@ -22,39 +22,45 @@
         <a href="https://skiawm91.github.io/Skhol-Dev/News" style="color:white;">News</a> |
         <a href="https://skiawm91.github.io/Skhol-Dev/Downloads" style="color:white;">Downloads</a> |
     </p>
-    <p>Other</p>
+    <h2>Downloads</h2>
     <ul id="file-list" class="fa-ul"></ul>
-    
     <script>
         const repoOwner = "Skiawm91";
         const repoName = "Skhol-Dev";
-        const folderPath = "Files";
         const branch = "main";
-
-        async function fetchFiles() {
-            const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}?ref=${branch}`;
+        const apiBase = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
+        async function fetchFiles(path, parentElement) {
+            const url = `${apiBase}${path}?ref=${branch}`;
             try {
                 const response = await fetch(url);
-                const files = await response.json();
-                const list = document.getElementById("file-list");
-                list.innerHTML = "";
-                
-                files.forEach(file => {
-                    if (file.type === "file") {
-                        const li = document.createElement("li");
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const items = await response.json();
+                parentElement.innerHTML = "";
+                items.forEach(item => {
+                    const li = document.createElement("li");
+                    if (item.type === "dir") {
+                        li.innerHTML = `<span class="fa-li"><i class="fa fa-folder"></i></span>
+                            <a href="#" style="color:white;" onclick="toggleFolder('${item.path}', this)">${item.name}</a>
+                            <ul id="folder-${item.path}" style="display:none; padding-left: 20px;"></ul>`;
+                    } else {
                         li.innerHTML = `<span class="fa-li"><i class="fa fa-file"></i></span>
-                                        <a href="${file.download_url}" style="color:white;">${file.name}</a>`;
-                        list.appendChild(li);
+                            <a href="${item.download_url}" style="color:white;">${item.name}</a>`;
                     }
+                    parentElement.appendChild(li);
                 });
             } catch (error) {
                 console.error("無法獲取 GitHub 檔案列表", error);
             }
         }
-
-        fetchFiles();
+        function toggleFolder(path, element) {
+            const folderElement = document.getElementById(`folder-${path}`);
+            if (!folderElement.hasAttribute("loaded")) {
+                fetchFiles(path, folderElement).then(() => folderElement.setAttribute("loaded", "true"));
+            }
+            folderElement.style.display = folderElement.style.display === "none" ? "block" : "none";
+        }
+        fetchFiles("Files", document.getElementById("file-list"));
     </script>
-    
     <footer>
         <small>2025(c) Skhol Dev</small>
     </footer>
