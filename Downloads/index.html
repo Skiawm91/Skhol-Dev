@@ -29,7 +29,8 @@
         const repoName = "Skhol-Dev";
         const branch = "main";
         const apiBase = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
-        async function fetchFiles(path, parentElement) {
+        
+        async function fetchFiles(path, parentElement, expandPath = "") {
             const url = `${apiBase}${path}?ref=${branch}`;
             try {
                 const response = await fetch(url);
@@ -42,24 +43,45 @@
                         li.innerHTML = `<span class="fa-li"><i class="fa fa-folder"></i></span>
                             <a href="#" style="color:white;" onclick="toggleFolder('${item.path}', this)">${item.name}</a>
                             <ul id="folder-${item.path}" style="display:none; padding-left: 20px;"></ul>`;
+                        parentElement.appendChild(li);
+                        if (expandPath.startsWith(item.path)) {
+                            toggleFolder(item.path, li.querySelector("a"), expandPath);
+                        }
                     } else {
                         li.innerHTML = `<span class="fa-li"><i class="fa fa-file"></i></span>
                             <a href="${item.download_url}" style="color:white;">${item.name}</a>`;
+                        parentElement.appendChild(li);
                     }
-                    parentElement.appendChild(li);
                 });
             } catch (error) {
                 console.error("無法獲取 GitHub 檔案列表", error);
             }
         }
-        function toggleFolder(path, element) {
+        
+        function toggleFolder(path, element, expandPath = "") {
             const folderElement = document.getElementById(`folder-${path}`);
-            if (!folderElement.hasAttribute("loaded")) {
-                fetchFiles(path, folderElement).then(() => folderElement.setAttribute("loaded", "true"));
+            if (!folderElement) return;
+            if (folderElement.style.display === "none" || folderElement.style.display === "") {
+                if (!folderElement.hasAttribute("loaded")) {
+                    fetchFiles(path, folderElement, expandPath).then(() => folderElement.setAttribute("loaded", "true"));
+                }
+                folderElement.style.display = "block";
+            } else {
+                folderElement.style.display = "none";
             }
-            folderElement.style.display = folderElement.style.display === "none" ? "block" : "none";
         }
-        fetchFiles("Files", document.getElementById("file-list"));
+        
+        function handleHash() {
+            const hashPath = decodeURIComponent(window.location.hash.substring(1));
+            if (hashPath) {
+                fetchFiles("Files", document.getElementById("file-list"), `Files/${hashPath}`);
+            } else {
+                fetchFiles("Files", document.getElementById("file-list"));
+            }
+        }
+        
+        window.addEventListener("hashchange", handleHash);
+        document.addEventListener("DOMContentLoaded", handleHash);
     </script>
     <footer>
         <small>2025(c) Skhol Dev</small>
