@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Skhol Dev</title>
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: Arial;
+            background-image: url('../images/wallpaper8K.png');
+            background-repeat: no-repeat;
+            color: white;
+        }
+    </style>
+</head>
+<body bgcolor="#000000">
+    <h1>(Skhol Dev) 官方網站</h1>
+    <p style="background-image: url('../images/banner.png');">
+        <br/><br/><br/>
+        | <a href="https://skiawm91.github.io/Skhol-Dev/home" style="color:white;">Home</a> |
+        <a href="https://skiawm91.github.io/Skhol-Dev/news" style="color:white;">News</a> |
+        <a href="https://skiawm91.github.io/Skhol-Dev/downloads" style="color:white;">Downloads</a> |
+    </p>
+    <h2>Downloads</h2>
+    <ul id="file-list" class="fa-ul"></ul>
+    <script>
+        const repoOwner = "Skiawm91";
+        const repoName = "Skhol-Dev";
+        const branch = "main";
+        const apiBase = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/`;
+        let expandedFolders = new Set();
+        async function fetchFiles(path, parentElement, expandPath = "") {
+            const url = `${apiBase}${path}?ref=${branch}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const items = await response.json();
+                parentElement.innerHTML = "";
+                items.forEach(item => {
+                    const li = document.createElement("li");
+                    if (item.type === "dir") {
+                        li.innerHTML = `<span class="fa-li"><i class="fa fa-folder"></i></span>
+                            <a href="#${item.path}" style="color:white;" onclick="toggleFolder('${item.path}', this, event)">${item.name}</a>
+                            <ul id="folder-${item.path}" style="display:none; padding-left: 20px;"></ul>`;
+                        parentElement.appendChild(li);
+                        if (expandedFolders.has(item.path) || expandPath.startsWith(item.path)) {
+                            toggleFolder(item.path, li.querySelector("a"), null, expandPath);
+                        }
+                    } else {
+                        li.innerHTML = `<span class="fa-li"><i class="fa fa-file"></i></span>
+                            <a href="${item.download_url}" style="color:white;">${item.name}</a>`;
+                        parentElement.appendChild(li);
+                    }
+                });
+            } catch (error) {
+                console.error("無法獲取 GitHub 檔案列表", error);
+            }
+        }
+        function toggleFolder(path, element, event, expandPath = "") {
+            if (event) event.preventDefault();
+            const folderElement = document.getElementById(`folder-${path}`);
+            if (!folderElement) return;
+            if (folderElement.style.display === "none" || folderElement.style.display === "") {
+                if (!folderElement.hasAttribute("loaded")) {
+                    fetchFiles(path, folderElement, expandPath).then(() => folderElement.setAttribute("loaded", "true"));
+                }
+                folderElement.style.display = "block";
+                expandedFolders.add(path);
+            } else {
+                folderElement.style.display = "none";
+                expandedFolders.delete(path);
+            }
+        }
+        function handleHash() {
+            const hashPath = decodeURIComponent(window.location.hash.substring(1));
+            fetchFiles("Files", document.getElementById("file-list"), `Files/${hashPath}`);
+        }
+        
+        window.addEventListener("hashchange", handleHash);
+        document.addEventListener("DOMContentLoaded", handleHash);
+    </script>
+    <footer>
+        <small>2025(c) Skhol Dev</small>
+    </footer>
+</body>
+</html>
