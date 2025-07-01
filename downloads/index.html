@@ -74,7 +74,7 @@
         }
         function handleHash() {
             const hashPath = decodeURIComponent(window.location.hash.substring(1));
-            fetchFiles("Files", document.getElementById("file-list"), `Files/${hashPath}`);
+            fetchFiles("files", document.getElementById("file-list"), `files/${hashPath}`);
         }
         
         window.addEventListener("hashchange", handleHash);
